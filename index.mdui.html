@@ -1,0 +1,1146 @@
+<!doctype html>
+<!--
+  SAMPLE: Material You (mdui 2) home page, derived from index.in.
+
+  This file is a *rendered* demo of how the generated home page could look with
+  mdui (https://www.mdui.org). It is not loaded by the site build; `index.in`
+  remains the template that pla-site-tool turns into `<lang>/index.html`.
+
+  Differences from index.in, for whoever ports it back:
+    - gettext markers _("...") are resolved to English for this sample,
+      and the $COUNT / $LANG / $SUPPORTED_LANGUAGES placeholders are filled
+      with sample values (marked with comments where they appear).
+    - the custom nav/footer/carousel/cards CSS is replaced by mdui components
+      styled with mdui design tokens, so it follows Material You colour/theme.
+    - the AM / AM-GUI / AppGallery carousel becomes <mdui-tabs>.
+    - the FAQ <details> become <mdui-collapse> items.
+    - the app list is rendered from apps.json when it is reachable, and from a
+      small inline demo set otherwise (so the search is usable when previewed
+      from a checkout with no build output).
+    - relative asset paths are used so the file also works when opened from a
+      plain checkout served at the repository root.
+-->
+<html lang="en" class="mdui-theme-auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>PORTABLE LINUX APPS</title>
+  <meta name="description" content="The first AUR-inspired Software Center of all AppImage packages and portable applications for GNU/Linux.">
+  <meta property="og:title" content="PORTABLE LINUX APPS">
+  <meta property="og:description" content="The first AUR-inspired Software Center of all AppImage packages and portable applications for GNU/Linux.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://portable-linux-apps.github.io/en/index.html">
+  <meta property="og:image" content="https://portable-linux-apps.github.io/pla.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PORTABLE LINUX APPS">
+  <meta name="twitter:image" content="https://portable-linux-apps.github.io/pla.jpg">
+  <meta name="twitter:description" content="The first AUR-inspired Software Center of all AppImage packages and portable applications for GNU/Linux.">
+  <link rel="canonical" href="https://portable-linux-apps.github.io/en/index.html">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <meta name="keywords" content="Portable, Linux, AppImage, AppImages, download, install, program, programs, application, applications, app, apps, package, packages, pkg, pkgs">
+
+  <!-- mdui 2 (Material You) -->
+  <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+  <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+  <!-- Material Icons, Rounded variant, used with the `--rounded` name suffix -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+  <!-- asciinema casts (unchanged from the current site) -->
+  <link rel="stylesheet" href="assets/css/asciinema-player.css">
+
+  <style>
+    :root {
+      --page-max: 1120px;
+      --page-pad: clamp(1rem, 4vw, 2rem);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Roboto, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: rgb(var(--mdui-color-surface));
+      color: rgb(var(--mdui-color-on-surface));
+      opacity: 0;
+    }
+    body.ready { opacity: 1; transition: opacity .25s ease; }
+
+    .is-hidden { display: none !important; }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      z-index: 2000;
+      padding: .75rem 1rem;
+      background: rgb(var(--mdui-color-primary));
+      color: rgb(var(--mdui-color-on-primary));
+      border-radius: 0 0 var(--mdui-shape-corner-small) 0;
+      text-decoration: none;
+    }
+    .skip-link:focus { left: 0; }
+
+    .page { max-width: var(--page-max); margin: 0 auto; padding-inline: var(--page-pad); }
+    .section-title {
+      font-size: 1.5rem;
+      line-height: 2rem;
+      font-weight: 500;
+      margin: 0 0 1rem;
+      color: rgb(var(--mdui-color-on-surface));
+    }
+    .section-lead {
+      margin: 0 0 1.5rem;
+      max-width: 70ch;
+      color: rgb(var(--mdui-color-on-surface-variant));
+      line-height: 1.6;
+    }
+    section { padding: 2.5rem 0; }
+    mdui-divider { margin: 0 auto; max-width: var(--page-max); }
+
+    /* ---------- Top app bar ---------- */
+    mdui-top-app-bar { background: rgb(var(--mdui-color-surface-container)); }
+    #lang-select { min-width: 130px; margin: 0 .25rem; }
+    .lang-select mdui-menu-item { min-width: 130px; }
+
+    /* ---------- Navigation drawer ---------- */
+    #nav-drawer::part(panel) { background: rgb(var(--mdui-color-surface-container-low)); }
+    .drawer-head {
+      display: flex;
+      gap: .875rem;
+      align-items: center;
+      padding: 1.25rem 1rem 1rem;
+    }
+    .drawer-head mdui-avatar {
+      --mdui-avatar-size: 44px;
+      background: rgb(var(--mdui-color-primary-container));
+      color: rgb(var(--mdui-color-on-primary-container));
+    }
+    .drawer-head strong { display: block; font-size: 1rem; }
+    .drawer-head span { display: block; font-size: .8125rem; color: rgb(var(--mdui-color-on-surface-variant)); }
+
+    /* ---------- Hero ---------- */
+    .hero-wrap { padding-top: 2.5rem; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(1.75rem, 5vw, 3.5rem);
+      border-radius: var(--mdui-shape-corner-extra-large);
+      background: rgb(var(--mdui-color-primary-container));
+      color: rgb(var(--mdui-color-on-primary-container));
+      text-align: center;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -20% -60% -20%;
+      height: 80%;
+      background: radial-gradient(closest-side, rgb(var(--mdui-color-primary) / .25), transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .375rem .875rem;
+      margin-bottom: 1rem;
+      border-radius: var(--mdui-shape-corner-full);
+      background: rgb(var(--mdui-color-surface) / .5);
+      font-size: .8125rem;
+      font-weight: 500;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      margin: 0 0 .5rem;
+      font-size: clamp(2.25rem, 6vw, 3.5rem);
+      line-height: 1.1;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .hero-tagline {
+      margin: 0 auto .75rem;
+      max-width: 620px;
+      font-size: clamp(1.0625rem, 2.5vw, 1.25rem);
+      font-weight: 500;
+    }
+    .hero-subtitle {
+      margin: 0 auto 1.75rem;
+      max-width: 640px;
+      color: rgb(var(--mdui-color-on-primary-container) / .82);
+      line-height: 1.6;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: center; position: relative; z-index: 1; }
+
+    /* ---------- Stats ---------- */
+    .stats { padding-top: 1rem; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .stat-card {
+      padding: 1.25rem;
+      border-radius: var(--mdui-shape-corner-large);
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+    }
+    .stat-card mdui-icon { font-size: 1.75rem; color: rgb(var(--mdui-color-primary)); }
+    .stat-num { font-size: 2rem; font-weight: 700; line-height: 1.1; margin-top: .5rem; }
+    .stat-label { font-size: .875rem; color: rgb(var(--mdui-color-on-surface-variant)); }
+
+    /* ---------- Search ---------- */
+    .search-card {
+      padding: 1.25rem;
+      border-radius: var(--mdui-shape-corner-large);
+      background: rgb(var(--mdui-color-surface-container));
+    }
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto auto auto;
+      gap: .75rem;
+      align-items: end;
+    }
+    @media (max-width: 900px) {
+      .search-row { grid-template-columns: 1fr 1fr; }
+      .search-row .grow { grid-column: 1 / -1; }
+      .search-row mdui-button { grid-column: 1 / -1; }
+    }
+    .filter-select { min-width: 190px; }
+    .search-hint { margin: .75rem 0 0; font-size: .8125rem; color: rgb(var(--mdui-color-on-surface-variant)); }
+
+    /* ---------- Results ---------- */
+    .results-head {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-bottom: .5rem;
+    }
+    .results-head h2 { margin: 0; font-size: 1.375rem; font-weight: 500; }
+    .count-chip { pointer-events: none; }
+    .app-list { width: 100%; }
+    .app-ico {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      border-radius: var(--mdui-shape-corner-small);
+    }
+    .app-ico-default { opacity: .5; }
+    .app-name {
+      color: rgb(var(--mdui-color-primary));
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .app-name:hover { text-decoration: underline; }
+    .app-desc {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      color: rgb(var(--mdui-color-on-surface-variant));
+    }
+    .app-actions { display: flex; align-items: center; gap: .25rem; }
+    @media (max-width: 640px) {
+      .app-actions mdui-button-icon { display: none; }
+      #lang-select { min-width: 92px; }
+      .hide-sm { display: none !important; }
+    }
+    .rank-heading { color: rgb(var(--mdui-color-primary)); font-weight: 600; }
+    .empty-card {
+      padding: 2rem;
+      text-align: center;
+      border-radius: var(--mdui-shape-corner-large);
+      background: rgb(var(--mdui-color-surface-container));
+    }
+    .empty-card mdui-icon { font-size: 2.5rem; color: rgb(var(--mdui-color-on-surface-variant)); }
+    .empty-card h3 { margin: .75rem 0 .25rem; font-weight: 500; }
+    .empty-card p { margin: 0 0 1.25rem; color: rgb(var(--mdui-color-on-surface-variant)); }
+
+    /* ---------- Categories ---------- */
+    .chip-grid { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .chip-grid mdui-chip { text-decoration: none; }
+
+    /* ---------- Install tabs ---------- */
+    .install-tabs { width: 100%; }
+    .panel-body { padding-top: 1.25rem; }
+    .slide-head h3 { margin: 0 0 .5rem; font-size: 1.375rem; font-weight: 500; }
+    .slide-desc { margin: 0 0 .75rem; max-width: 75ch; color: rgb(var(--mdui-color-on-surface-variant)); line-height: 1.6; }
+    .slide-link {
+      color: rgb(var(--mdui-color-primary));
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .ascii-grid, .shot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+    .ascii-tile, .shot-tile {
+      border-radius: var(--mdui-shape-corner-large);
+      background: rgb(var(--mdui-color-surface-container));
+      padding: .75rem;
+      overflow: hidden;
+    }
+    .ascii-player { min-height: 180px; }
+    .ascii-title { display: block; margin-top: .5rem; font-size: .875rem; color: rgb(var(--mdui-color-on-surface-variant)); }
+    .shot-img { width: 100%; display: block; border-radius: var(--mdui-shape-corner-medium); }
+
+    /* ---------- FAQ ---------- */
+    .faq-collapse { width: 100%; }
+    .faq-collapse mdui-collapse-item { border-radius: var(--mdui-shape-corner-medium); }
+    .faq-body { padding: .25rem 1rem 1rem 3rem; }
+    .faq-body pre {
+      overflow-x: auto;
+      padding: 1rem;
+      border-radius: var(--mdui-shape-corner-medium);
+      background: rgb(var(--mdui-color-surface-container-highest));
+      font-size: .8125rem;
+      line-height: 1.5;
+    }
+    .faq-body code { font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    /* ---------- Footer ---------- */
+    footer {
+      background: rgb(var(--mdui-color-surface-container));
+      margin-top: 1rem;
+    }
+    .footer-inner {
+      max-width: var(--page-max);
+      margin: 0 auto;
+      padding: 2rem var(--page-pad) 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .footer-links { display: flex; flex-wrap: wrap; gap: .25rem; }
+    .footer-copy { margin: 0; font-size: .8125rem; color: rgb(var(--mdui-color-on-surface-variant)); }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<!-- ---------- Navigation drawer ---------- -->
+<mdui-navigation-drawer id="nav-drawer" modal close-on-esc close-on-overlay-click>
+  <div class="drawer-head">
+    <mdui-avatar icon="widgets--rounded" aria-hidden="true"></mdui-avatar>
+    <div>
+      <strong>PORTABLE LINUX APPS</strong>
+      <span>The AppImage Software Center</span>
+    </div>
+  </div>
+  <mdui-divider></mdui-divider>
+  <mdui-list>
+    <mdui-list-item icon="home--rounded" href="#" active>Home</mdui-list-item>
+    <mdui-list-item icon="apps--rounded" href="apps.html">Apps</mdui-list-item>
+    <mdui-list-item icon="help_outline--rounded" href="#faq">FAQ</mdui-list-item>
+    <mdui-list-item icon="menu_book--rounded" href="wiki.html">Wiki</mdui-list-item>
+    <mdui-list-item icon="download--rounded" href="#install">How to install</mdui-list-item>
+  </mdui-list>
+  <mdui-divider></mdui-divider>
+  <mdui-list>
+    <mdui-list-item
+      icon="code--rounded"
+      href="https://github.com/Portable-Linux-Apps/Portable-Linux-Apps.github.io"
+      target="_blank"
+      rel="noopener noreferrer">GitHub</mdui-list-item>
+    <mdui-list-item
+      icon="volunteer_activism--rounded"
+      href="https://ko-fi.com/IvanAlexHC"
+      target="_blank"
+      rel="noopener noreferrer">Support the project</mdui-list-item>
+  </mdui-list>
+</mdui-navigation-drawer>
+
+<!-- ---------- Top app bar ---------- -->
+<mdui-top-app-bar scroll-behavior="elevate">
+  <mdui-button-icon id="open-drawer" icon="menu--rounded" aria-label="Open navigation drawer"></mdui-button-icon>
+  <mdui-top-app-bar-title>PORTABLE LINUX APPS</mdui-top-app-bar-title>
+  <div style="flex-grow: 1"></div>
+  <mdui-button-icon id="theme-toggle" icon="brightness_auto--rounded" aria-label="Change theme"></mdui-button-icon>
+  <!-- $SUPPORTED_LANGUAGES: ["en","it","vi"] in index.in -->
+  <mdui-select id="lang-select" value="en" aria-label="Language" class="lang-select">
+    <mdui-menu-item value="en">English</mdui-menu-item>
+    <mdui-menu-item value="it">Italiano</mdui-menu-item>
+    <mdui-menu-item value="vi">Tiếng Việt</mdui-menu-item>
+  </mdui-select>
+  <mdui-button-icon
+    class="hide-sm"
+    href="https://github.com/Portable-Linux-Apps/Portable-Linux-Apps.github.io"
+    target="_blank"
+    rel="noopener noreferrer"
+    icon="code--rounded"
+    aria-label="Project on GitHub"></mdui-button-icon>
+</mdui-top-app-bar>
+
+<main id="main">
+  <!-- ---------- Hero ---------- -->
+  <section class="hero-wrap page">
+    <mdui-card class="hero" variant="filled">
+      <span class="hero-eyebrow"><mdui-icon name="widgets--rounded" aria-hidden="true"></mdui-icon> AppImage Software Center</span>
+      <h1>PORTABLE LINUX APPS</h1>
+      <p class="hero-tagline">The first AUR-inspired AppImage Software Center!</p>
+      <p class="hero-subtitle">Welcome to the most complete database of all AppImage packages and portable applications for GNU/Linux.</p>
+      <div class="hero-actions">
+        <mdui-button variant="filled" icon="apps--rounded" href="apps.html">Browse apps</mdui-button>
+        <mdui-button variant="tonal" icon="download--rounded" href="#install">How to install</mdui-button>
+        <mdui-button variant="outlined" icon="code--rounded" href="https://github.com/ivan-hc/AM" target="_blank" rel="noopener noreferrer">Get AM</mdui-button>
+      </div>
+    </mdui-card>
+  </section>
+
+  <!-- ---------- Stats ---------- -->
+  <!-- Sample values: index.in fills these from $UNIQUE_COUNT, $APPIMAGE_COUNT,
+       $PORTABLE_COUNT, $SUITS_COUNT and $ITEMS_COUNT. -->
+  <section class="stats page">
+    <div class="stats-grid">
+      <mdui-card class="stat-card" variant="elevated">
+        <mdui-icon name="inventory_2--rounded" aria-hidden="true"></mdui-icon>
+        <span class="stat-num">3,200</span>
+        <span class="stat-label">unique apps</span>
+      </mdui-card>
+      <mdui-card class="stat-card" variant="elevated">
+        <mdui-icon name="package_2--rounded" aria-hidden="true"></mdui-icon>
+        <span class="stat-num">2,400</span>
+        <span class="stat-label">AppImage packages</span>
+      </mdui-card>
+      <mdui-card class="stat-card" variant="elevated">
+        <mdui-icon name="folder_zip--rounded" aria-hidden="true"></mdui-icon>
+        <span class="stat-num">800</span>
+        <span class="stat-label">standalone/portable programs</span>
+      </mdui-card>
+      <mdui-card class="stat-card" variant="elevated">
+        <mdui-icon name="workspaces--rounded" aria-hidden="true"></mdui-icon>
+        <span class="stat-num">42 <small>/ 260</small></span>
+        <span class="stat-label">metapackages containing items</span>
+      </mdui-card>
+    </div>
+  </section>
+
+  <!-- ---------- Search ---------- -->
+  <section class="page" style="padding-top: 0">
+    <mdui-card class="search-card" variant="filled">
+      <form id="home-search-form" class="search-row" role="search">
+        <mdui-text-field
+          id="home-search-input"
+          class="grow"
+          label="Search apps"
+          placeholder="e.g. firefox, vlc, gimp"
+          icon="search--rounded"
+          clearable></mdui-text-field>
+        <mdui-select id="home-arch-select" class="filter-select" label="Architecture" placeholder="All architectures">
+          <mdui-menu-item value="">All architectures</mdui-menu-item>
+          <mdui-menu-item value="x86_64">x86_64</mdui-menu-item>
+          <mdui-menu-item value="aarch64">aarch64</mdui-menu-item>
+          <mdui-menu-item value="i686">i686</mdui-menu-item>
+          <mdui-menu-item value="armv7l">armv7l</mdui-menu-item>
+        </mdui-select>
+        <mdui-select id="home-cat-select" class="filter-select" label="Category" placeholder="All categories">
+          <mdui-menu-item value="">All categories</mdui-menu-item>
+        </mdui-select>
+        <mdui-button type="submit" variant="filled" icon="search--rounded">Search</mdui-button>
+      </form>
+      <p class="search-hint">Results are filtered live as you type. Pick an architecture or a category to narrow them down.</p>
+    </mdui-card>
+  </section>
+
+  <!-- ---------- Search results ---------- -->
+  <section id="search-results" class="page is-hidden" aria-live="polite" style="padding-top: 0">
+    <div class="results-head">
+      <h2 id="search-results-title">Search Results</h2>
+      <mdui-chip id="results-count-chip" class="count-chip" variant="assist"></mdui-chip>
+    </div>
+    <mdui-list id="app-list" class="app-list"></mdui-list>
+    <mdui-card id="search-empty" class="empty-card is-hidden" variant="filled">
+      <mdui-icon name="search_off--rounded" aria-hidden="true"></mdui-icon>
+      <h3 id="search-empty-title">No applications found</h3>
+      <p id="search-empty-hint">Check for typos or try searching with different keywords.</p>
+      <mdui-button id="search-empty-reset" variant="tonal">Clear search</mdui-button>
+    </mdui-card>
+  </section>
+
+  <!-- ---------- Categories ---------- -->
+  <section id="categories-section" class="page" style="padding-top: 0">
+    <h2 class="section-title">Categories</h2>
+    <div class="chip-grid">
+      <mdui-chip variant="assist" icon="apps--rounded" href="appimages.html">AppImages</mdui-chip>
+      <mdui-chip variant="assist" icon="bolt--rounded" href="appimage-on-the-fly.html">AppImage on the Fly</mdui-chip>
+      <mdui-chip variant="assist" icon="smart_toy--rounded" href="ai.html">AI</mdui-chip>
+      <mdui-chip variant="assist" icon="build--rounded" href="am-utils.html">AM Utils</mdui-chip>
+      <mdui-chip variant="assist" icon="android--rounded" href="android.html">Android</mdui-chip>
+      <mdui-chip variant="assist" icon="graphic_eq--rounded" href="audio.html">Audio</mdui-chip>
+      <mdui-chip variant="assist" icon="auto_stories--rounded" href="comic.html">Comic</mdui-chip>
+      <mdui-chip variant="assist" icon="terminal--rounded" href="command-line.html">Command Line</mdui-chip>
+      <mdui-chip variant="assist" icon="forum--rounded" href="communication.html">Communication</mdui-chip>
+      <mdui-chip variant="assist" icon="storage--rounded" href="disk.html">Disk</mdui-chip>
+      <mdui-chip variant="assist" icon="school--rounded" href="education.html">Education</mdui-chip>
+      <mdui-chip variant="assist" icon="memory--rounded" href="emulator.html">Emulator</mdui-chip>
+      <mdui-chip variant="assist" icon="folder--rounded" href="file-manager.html">File Manager</mdui-chip>
+      <mdui-chip variant="assist" icon="payments--rounded" href="finance.html">Finance</mdui-chip>
+      <mdui-chip variant="assist" icon="sports_esports--rounded" href="game.html">Game</mdui-chip>
+      <mdui-chip variant="assist" icon="desktop_windows--rounded" href="gnome.html">GNOME</mdui-chip>
+      <mdui-chip variant="assist" icon="palette--rounded" href="graphic.html">Graphic</mdui-chip>
+      <mdui-chip variant="assist" icon="public--rounded" href="internet.html">Internet</mdui-chip>
+      <mdui-chip variant="assist" icon="desktop_windows--rounded" href="kde.html">KDE</mdui-chip>
+      <mdui-chip variant="assist" icon="inventory_2--rounded" href="metapackages.html">Metapackages</mdui-chip>
+      <mdui-chip variant="assist" icon="description--rounded" href="office.html">Office</mdui-chip>
+      <mdui-chip variant="assist" icon="password--rounded" href="password.html">Password</mdui-chip>
+      <mdui-chip variant="assist" icon="widgets--rounded" href="portable.html">Portable</mdui-chip>
+      <mdui-chip variant="assist" icon="terminal--rounded" href="portable-cli.html">Portable CLI</mdui-chip>
+      <mdui-chip variant="assist" icon="computer--rounded" href="portable-desktop.html">Portable Desktop</mdui-chip>
+      <mdui-chip variant="assist" icon="videogame_asset--rounded" href="steam.html">Steam</mdui-chip>
+      <mdui-chip variant="assist" icon="monitor_heart--rounded" href="system-monitor.html">System Monitor</mdui-chip>
+      <mdui-chip variant="assist" icon="movie--rounded" href="video.html">Video</mdui-chip>
+      <mdui-chip variant="assist" icon="dns--rounded" href="virtual-machine.html">Virtual Machine</mdui-chip>
+      <mdui-chip variant="assist" icon="account_balance_wallet--rounded" href="wallet.html">Wallet</mdui-chip>
+      <mdui-chip variant="assist" icon="language--rounded" href="web-app.html">Web App</mdui-chip>
+      <mdui-chip variant="assist" icon="public--rounded" href="web-browser.html">Web Browser</mdui-chip>
+      <mdui-chip variant="assist" icon="wine_bar--rounded" href="wine.html">Wine</mdui-chip>
+      <mdui-chip variant="assist" icon="smart_display--rounded" href="youtube.html">YouTube</mdui-chip>
+    </div>
+  </section>
+
+  <mdui-divider></mdui-divider>
+
+  <!-- ---------- About ---------- -->
+  <section class="page mdui-prose">
+    <h2 class="section-title">About this project</h2>
+    <p>Portable Linux Apps are standalone applications for GNU/Linux that can run everywhere, also on a USB stick. These can be AppImage packages or standalone archives. Each app has its own installation script, PKGBUILD style, managed by the <a href="https://github.com/ivan-hc/AM">AM package manager</a>.</p>
+    <p>This catalog is open source. You can contribute by editing the pages, adding missing information, or improving the database.</p>
+  </section>
+
+  <mdui-divider></mdui-divider>
+
+  <!-- ---------- Install ---------- -->
+  <section id="install" class="page">
+    <h2 class="section-title">Installing apps listed on this site</h2>
+    <p class="section-lead">Every app on this site comes with its own installation script, PKGBUILD style, managed by the AM package manager. Pick the tool that fits you best:</p>
+
+    <mdui-tabs value="am" class="install-tabs">
+      <mdui-tab value="am" icon="terminal--rounded" inline>AM / AppMan</mdui-tab>
+      <mdui-tab value="am-gui" icon="desktop_windows--rounded" inline>AM-GUI</mdui-tab>
+      <mdui-tab value="appgallery" icon="grid_view--rounded" inline>AppGallery</mdui-tab>
+
+      <mdui-tab-panel slot="panel" value="am">
+        <div class="panel-body">
+          <div class="slide-head">
+            <h3>AM / AppMan</h3>
+            <p class="slide-desc">The first AUR-inspired, feature-rich AppImage and portable apps manager. Install, update, remove and integrate all your apps from the command line &mdash; system-wide with AM, or fully portable with AppMan.</p>
+            <a class="slide-link" href="https://github.com/ivan-hc/AM">AM on GitHub &rarr;</a>
+          </div>
+          <div class="ascii-grid">
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/sandbox.cast" role="img" aria-label="Watch AM demo: sandbox AppImages"></div>
+              <span class="ascii-title">sandbox AppImages</span>
+            </div>
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/list.cast" role="img" aria-label="Watch AM demo: list available apps"></div>
+              <span class="ascii-title">list available apps</span>
+            </div>
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/about.cast" role="img" aria-label="Watch AM demo: info about the apps"></div>
+              <span class="ascii-title">info about the apps</span>
+            </div>
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/install.cast" role="img" aria-label="Watch AM demo: install applications"></div>
+              <span class="ascii-title">install applications</span>
+            </div>
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/query.cast" role="img" aria-label="Watch AM demo: query lists using keywords"></div>
+              <span class="ascii-title">query lists using keywords</span>
+            </div>
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/files.cast" role="img" aria-label="Watch AM demo: show the installed apps"></div>
+              <span class="ascii-title">show the installed apps</span>
+            </div>
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/snapshot.cast" role="img" aria-label="Watch AM demo: create and restore snapshots"></div>
+              <span class="ascii-title">create and restore snapshots</span>
+            </div>
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/update.cast" role="img" aria-label="Watch AM demo: update everything"></div>
+              <span class="ascii-title">update everything</span>
+            </div>
+            <div class="ascii-tile">
+              <div class="ascii-player" data-cast="casts/nolibfuse.cast" role="img" aria-label="Watch AM demo: get rid of libfuse2"></div>
+              <span class="ascii-title">get rid of libfuse2</span>
+            </div>
+          </div>
+        </div>
+      </mdui-tab-panel>
+
+      <mdui-tab-panel slot="panel" value="am-gui">
+        <div class="panel-body">
+          <div class="slide-head">
+            <h3>AM-GUI</h3>
+            <p class="slide-desc">[Under development] A graphical interface for the AM package manager. Browse, install and update apps with a few clicks, no terminal required.</p>
+            <a class="slide-link" href="https://github.com/Shikakiben/AM-GUI">AM-GUI on GitHub &rarr;</a>
+          </div>
+          <div class="shot-grid">
+            <div class="shot-tile"><img class="shot-img" loading="lazy" src="https://github.com/Shikakiben/AM-GUI/blob/main/screenshots/dark.png?raw=true" alt="AM-GUI dark theme"></div>
+            <div class="shot-tile"><img class="shot-img" loading="lazy" src="https://github.com/kazam0180/pla-site-testing/blob/main/am-gui/1.webp?raw=true" alt="AM-GUI screenshot 1"></div>
+            <div class="shot-tile"><img class="shot-img" loading="lazy" src="https://github.com/kazam0180/pla-site-testing/blob/main/am-gui/2.webp?raw=true" alt="AM-GUI screenshot 2"></div>
+            <div class="shot-tile"><img class="shot-img" loading="lazy" src="https://github.com/kazam0180/pla-site-testing/blob/main/am-gui/3.webp?raw=true" alt="AM-GUI screenshot 3"></div>
+          </div>
+        </div>
+      </mdui-tab-panel>
+
+      <mdui-tab-panel slot="panel" value="appgallery">
+        <div class="panel-body">
+          <div class="slide-head">
+            <h3>AppGallery</h3>
+            <p class="slide-desc">[Under development] GTK frontend for AM.</p>
+            <a class="slide-link" href="https://gitlab.com/kazamOS/appgallery">AppGallery on GitLab &rarr;</a>
+          </div>
+          <div class="shot-grid">
+            <div class="shot-tile"><img class="shot-img" loading="lazy" src="https://gitlab.com/kazamOS/appgallery/-/raw/main/images/1.webp?ref_type=heads" alt="AppGallery screenshot 1"></div>
+            <div class="shot-tile"><img class="shot-img" loading="lazy" src="https://gitlab.com/kazamOS/appgallery/-/raw/main/images/2.webp?ref_type=heads" alt="AppGallery screenshot 2"></div>
+            <div class="shot-tile"><img class="shot-img" loading="lazy" src="https://gitlab.com/kazamOS/appgallery/-/raw/main/images/3.webp?ref_type=heads" alt="AppGallery screenshot 3"></div>
+            <div class="shot-tile"><img class="shot-img" loading="lazy" src="https://gitlab.com/kazamOS/appgallery/-/raw/main/images/4.webp?ref_type=heads" alt="AppGallery screenshot 4"></div>
+          </div>
+        </div>
+      </mdui-tab-panel>
+    </mdui-tabs>
+  </section>
+
+  <mdui-divider></mdui-divider>
+
+  <!-- ---------- FAQ ---------- -->
+  <section id="faq" class="page">
+    <h2 class="section-title">FAQ</h2>
+
+    <mdui-collapse class="faq-collapse" accordion>
+      <mdui-collapse-item value="faq-1" id="faq-1">
+        <mdui-list-item slot="header" icon="bolt--rounded">How do I make the install button work?</mdui-list-item>
+        <div class="faq-body mdui-prose">
+          <p><em>The &ldquo;Install&rdquo; button on each app page uses the <code>pla-install://</code> protocol. You need a helper application to handle it. Currently, you have the following options:</em></p>
+          <ul>
+            <li><a href="https://github.com/ivan-hc/AM">AM</a> or <a href="https://github.com/ivan-hc/AppMan">AppMan</a></li>
+            <li><a href="https://github.com/Shikakiben/AM-GUI">AM-GUI</a></li>
+            <li><a href="https://gitlab.com/kazamOS/appgallery">AppGallery</a></li>
+          </ul>
+        </div>
+      </mdui-collapse-item>
+
+      <mdui-collapse-item value="faq-2" id="faq-2">
+        <mdui-list-item slot="header" icon="folder_zip--rounded">What are the portable linux apps?</mdui-list-item>
+        <div class="faq-body mdui-prose">
+          <p><em>Portable Linux Apps are standalone applications for GNU/Linux that can (theoretically) run everywhere, also on a USB stick. These applications can be AppImage packages (see <a href="https://appimage.org/">appimage.org</a>) or standalone archives (for example Firefox, Thunderbird&hellip;).</em></p>
+        </div>
+      </mdui-collapse-item>
+
+      <mdui-collapse-item value="faq-3" id="faq-3">
+        <mdui-list-item slot="header" icon="compare_arrows--rounded">How is this site different from other sites that list AppImage packages?</mdui-list-item>
+        <div class="faq-body mdui-prose">
+          <p><em>This catalog aims to survey and list all the AppImages and autonomous programs, and aims to provide a centralized point where you can document yourself on individual apps and where you can easily reach the URLs to the sources, both through the pages dedicated to each app and by reading the &ldquo;installation scripts&rdquo;.</em></p>
+          <p><em>Yeah, each app has its own installation script, PKGBUILD style, but with an alternative package manager named &ldquo;<a href="https://github.com/ivan-hc/AM">AM</a>&rdquo;, which works like the more classic APT, PacMan/YAY, DNF&hellip; and which can therefore place them in specific paths of the filesystem, like any program, and allows updates via a system of scripts called &ldquo;AM-updater&rdquo;. If an app can&rsquo;t update itself, the dedicated &ldquo;AM-updater&rdquo; script will use an application-specific method to always update your favorite apps to the latest version. FOR REAL!</em></p>
+          <p><em>This catalog is open source. You can edit its pages, update them and see the sources clearly, as a &ldquo;wiki&rdquo;.</em></p>
+
+          <h3>About other catalogs</h3>
+          <p><em>While I recognize the role they have had so far in supporting the diffusion of AppImage as a packaging format, through the years, as a former user, I would like to underline what led me to open an alternative catalogue:</em></p>
+          <ul>
+            <li><em>&ldquo;<a href="https://appimage.github.io/">appimage.github.io</a>&rdquo; serves more than anything else to catalog the AppImages based on validation processes based on Github Actions (i.e. that the package is compatible with old versions of Ubuntu LTS). From the developer&rsquo;s point of view it&rsquo;s fine, but <strong>from the point of view of the user who searches for AppImage packages without going into the depths of the internet, it&rsquo;s totally useless</strong>. As a catalog it is limited to showing only that an app exists or has existed in the past, without worrying about <strong>obsolete packages that no longer exist, but still listed only &ldquo;to make up the numbers&rdquo;</strong>. Many pages have no buttons to the sources and all pages have no additional information on individual apps, <strong>each page is simply a copy/paste message</strong> that says that the app &ldquo;is available as an AppImage which means one app = one file&hellip;&rdquo; etcetera etcetera.</em></li>
+            <li><em>&ldquo;<a href="https://www.appimagehub.com/">appimagehub.com</a>&rdquo; hosts applications not always provided by the original developer, just check the profile of whoever uploaded the application and how many &ldquo;products&rdquo; they uploaded. Some admit that they are not the developers, despite having a donation button available, effectively <strong>leading them to earning on work of others</strong>, and are often greedy enough to not include the real source! These profiles use random hosting services for these applications, and Pling&rsquo;s APIs does not allow you to clearly verify the origin of any package that is downloaded. There is no control over this, and the only validity check of a &ldquo;product&rdquo; is the feedback of the users who use it, and which in any case is <strong>not sufficient either to guarantee the safety of an app, nor to do justice to the real owner of that package, who was in fact &ldquo;robbed&rdquo; of its work</strong>.</em></li>
+          </ul>
+          <p><em>Furthermore, <strong>none of them track updates consistently</strong>.</em></p>
+          <p><em>From the aforementioned defects I understood what a catalog of portable applications should NOT do to be reliable.</em></p>
+        </div>
+      </mdui-collapse-item>
+
+      <mdui-collapse-item value="faq-4" id="faq-4">
+        <mdui-list-item slot="header" icon="edit_note--rounded">How can I improve the pages on this site?</mdui-list-item>
+        <div class="faq-body mdui-prose">
+          <p><em>All app data is stored in a markdown-ish format sourced from the <a href="https://github.com/ivan-hc/AM/blob/main/programs/x86_64-apps">AM application list</a>. Each app has a corresponding file in the <code>apps/</code> folder with its description, sites, sources and screenshots, generated by the <a href="https://gitlab.com/kazam0180/pla-site-tool"><code>pla-site-tool</code></a>.</em></p>
+          <ul>
+            <li><em>app icons must be 128x128 PNG files placed in the <code>icons/</code> folder, named after the app;</em></li>
+            <li><em>the application lists are automatically generated by <a href="https://gitlab.com/kazam0180/pla-site-tool">this script</a>. Any changes to the lists and descriptions must be made to <a href="https://github.com/ivan-hc/AM/blob/main/programs/x86_64-apps">this file</a>, which is the general list of apps managed by &ldquo;AM&rdquo;/&ldquo;AppMan&rdquo;;</em></li>
+          </ul>
+          <p><em>For any suggestions, open an <a href="https://github.com/ivan-hc/AM/issues">issue</a> at https://github.com/ivan-hc/AM or a <a href="https://github.com/Portable-Linux-Apps/Portable-Linux-Apps.github.io/pulls">pull request</a> at https://github.com/Portable-Linux-Apps/Portable-Linux-Apps.github.io</em></p>
+        </div>
+      </mdui-collapse-item>
+
+      <mdui-collapse-item value="faq-5" id="faq-5">
+        <mdui-list-item slot="header" icon="add_notes--rounded">How can I add or improve info about an app on this site?</mdui-list-item>
+        <div class="faq-body mdui-prose">
+          <p><em>If you want to improve an app&rsquo;s page in this catalogue (i.e. add more detailed description, screenshots, sites, etc.), read on.</em></p>
+          <p><em>The app files in <code>apps</code> folder are in a simple markdown-ish format, the description must be wrapped between the <code>===</code> lines.</em></p>
+          <ol>
+            <li>
+              <em>Create a text file like this:</em>
+<pre># some app
+
+===
+description of your app. must be within the `===` lines.
+only use **bold**, *italic*, ++underline++, lists markdown here
+- do not add links or images here
+- use SOURCES field if you package someone else's app
+===
+
+# SCREENSHOTS: https://Portable-Linux-Apps.github.io/contribute_ss.webp
+# SITES: https://someapp.io
+# SOURCES: https://github.com/name/someapp-appimage
+# BUTTONS: Label_of_Button::https://discord.gg Donation_Link::https://someapp.io/donate</pre>
+              <p><em>Explanation of the fields:</em></p>
+              <ul>
+                <li><em><code>SCREENSHOTS</code>: a space separated list of image URLs</em></li>
+                <li><em><code>SITES</code>: space separated site URLs that provide the AppImage</em></li>
+                <li><em><code>SOURCES</code>: if you are packaging someone&rsquo;s else&rsquo;s app, link the git repo(s) here</em></li>
+                <li><em><code>BUTTONS</code>: space separated button definitions in the form of <code>Button_Title::URL</code></em></li>
+              </ul>
+            </li>
+            <li><em>Copy the app&rsquo;s icon (should be of same name) to <code>icons</code> folder.</em></li>
+          </ol>
+        </div>
+      </mdui-collapse-item>
+
+      <mdui-collapse-item value="faq-8" id="faq-8">
+        <mdui-list-item slot="header" icon="storage--rounded">Is there a centralized repository for AppImage packages?</mdui-list-item>
+        <div class="faq-body mdui-prose">
+          <p><em>Depends on what you mean by &ldquo;<strong>centralized package repository</strong>&rdquo;, if you mean a repository that stores them all like Debian-based distributions do with DEB packages, no, there are thousands of packages, and they are usually distributed to remote sites and difficult to find.</em></p>
+          <p><em>If instead you mean an AUR-style repo with scripts that easily find all AppImages, <strong>you&rsquo;re in the right place!</strong></em></p>
+          <p><em>This catalog and its CLI, &ldquo;<a href="https://github.com/ivan-hc/AM">AM</a>&rdquo;, make it easy for you to find, install, integrate and update all AppImage packages!</em></p>
+          <p><em>This catalog is just the frontend for an ever growing database that aims to extend not only to x86_64 architecture apps listed here, but also to all others, from the modern ARM64/aarch64 to oldest i686, as an universal solution for all AppImages and portable programs for GNU/Linux!</em></p>
+        </div>
+      </mdui-collapse-item>
+
+      <mdui-collapse-item value="faq-6" id="faq-6">
+        <mdui-list-item slot="header" icon="support_agent--rounded">I need help with something</mdui-list-item>
+        <div class="faq-body mdui-prose">
+          <p><em>Check the <a href="wiki.html">wiki</a> for guides and documentation.</em></p>
+          <p><em>If you still need help, open an <a href="https://github.com/ivan-hc/AM/issues">issue</a> on GitHub.</em></p>
+          <p><em>You can also join the <a href="https://discord.gg/uxvPepQUkY">pkgforge Discord</a> to ask the community directly.</em></p>
+        </div>
+      </mdui-collapse-item>
+
+      <mdui-collapse-item value="faq-7" id="faq-7">
+        <mdui-list-item slot="header" icon="report--rounded">Why can&rsquo;t I run the install scripts standalone?</mdui-list-item>
+        <div class="faq-body mdui-prose">
+          <p><em>NOTE, the installer scripts in the &quot;INSTALLER&quot; column are intended for use via &quot;AM&quot;, and are therefore dedicated to a system-wide installation of applications (in /opt), and all that &quot;AppMan&quot; does is convert those scripts for local installation, changing the paths. <strong>They are listed here for reading purposes only</strong>!</em></p>
+          <p><em>Should you decide to run them manually, the only way to remove the application is to run the command <code>sudo /opt/appname/remove</code>, where &quot;appname&quot; is the name of the application directory containing the &quot;remove&quot; script. Likewise, you can also update applications by running the &quot;AM-updater&quot; script in the same directory.</em></p>
+          <p><em>The &quot;AM&quot; project allow the autonomy of installed apps, regardless of the presence of &quot;AM&quot; itself in the system. However, it is strongly recommended to use &quot;AM&quot; and &quot;AppMan&quot; to take full advantage of all the benefits you could get from an application installed in this way.</em></p>
+          <p><em>If you are here just to download apps manually, click on the program name and check the URL(s) on the application page. This site does not provide direct links, for security reasons, but it does provide the exact sources and references where you can find them!</em></p>
+          <p><em>Transparency and credibility are the focus of this catalog. Happy exploring!</em></p>
+        </div>
+      </mdui-collapse-item>
+    </mdui-collapse>
+  </section>
+</main>
+
+<footer>
+  <mdui-divider></mdui-divider>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <mdui-button variant="text" href="#">Home</mdui-button>
+      <mdui-button variant="text" href="apps.html">Apps</mdui-button>
+      <mdui-button variant="text" href="#faq">FAQ</mdui-button>
+      <mdui-button variant="text" href="wiki.html">Wiki</mdui-button>
+    </div>
+    <div class="footer-links">
+      <mdui-button variant="text" icon="volunteer_activism--rounded" href="https://ko-fi.com/IvanAlexHC" target="_blank" rel="noopener noreferrer">ko-fi.com</mdui-button>
+      <mdui-button variant="text" icon="payments--rounded" href="https://paypal.me/IvanAlexHC" target="_blank" rel="noopener noreferrer">PayPal.me</mdui-button>
+      <mdui-button variant="text" icon="code--rounded" href="https://github.com/Portable-Linux-Apps/Portable-Linux-Apps.github.io" target="_blank" rel="noopener noreferrer">GitHub</mdui-button>
+    </div>
+    <p class="footer-copy">&copy; 2020-present Ivan Alessandro Sala aka 'Ivan-HC' &mdash; I'm here just for fun!</p>
+  </div>
+</footer>
+
+<script src="assets/js/asciinema-player.min.js"></script>
+<script src="assets/js/casts.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var LANG = 'en'; // index.in uses $LANG
+  var THEME_KEY = 'pla-theme';
+  var LANG_KEY = 'preferredLang';
+
+  function ready() { document.body.classList.add('ready'); }
+  try {
+    if (window.customElements && customElements.whenDefined) {
+      Promise.allSettled([
+        'mdui-top-app-bar', 'mdui-navigation-drawer', 'mdui-card', 'mdui-text-field',
+        'mdui-select', 'mdui-menu-item', 'mdui-list', 'mdui-chip', 'mdui-collapse',
+        'mdui-collapse-item', 'mdui-tabs'
+      ].map(function (n) { return customElements.whenDefined(n); })).then(ready);
+      setTimeout(ready, 1500);
+    } else {
+      ready();
+    }
+  } catch (e) { ready(); }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  var SAMPLE_APPS = [
+    { name: 'firefox', description: 'Firefox is a powerful, extensible web browser with support for modern web application technologies.', archs: ['x86_64', 'aarch64', 'i686'] },
+    { name: 'brave', description: 'Brave is a privacy oriented web browser based on Chromium that blocks ads and trackers.', archs: ['x86_64', 'aarch64'] },
+    { name: 'librewolf', description: 'LibreWolf Web Browser is a fork of Firefox, focused on privacy, security and freedom.', archs: ['x86_64'] },
+    { name: 'vlc', description: 'VLC is a free and open source multimedia player that plays most multimedia files as well as DVDs, Audio CDs and streaming protocols.', archs: ['x86_64', 'aarch64', 'i686', 'armv7l'] },
+    { name: 'gimp', description: 'GIMP is community-driven free software for high-end image creation and manipulation.', archs: ['x86_64', 'aarch64'] },
+    { name: 'blender', description: 'Blender is a free and open-source 3D graphics toolset for animated films, visual effects, art, 3D models and games.', archs: ['x86_64'] },
+    { name: 'krita', description: 'Krita is a professional free and open source painting program, made by artists for everyone.', archs: ['x86_64', 'aarch64'] },
+    { name: 'obs-studio', description: 'OBS Studio is free and open source software for video recording and live streaming.', archs: ['x86_64'] },
+    { name: 'steam', description: 'Steam is a video game digital distribution service by Valve.', archs: ['x86_64'] },
+    { name: 'discord', description: 'Discord is a voice, video and text communication service.', archs: ['x86_64'] },
+    { name: 'thunderbird', description: 'Thunderbird is a free and open source email, newsfeed, chat and calendar client.', archs: ['x86_64', 'aarch64'] },
+    { name: 'inkscape', description: 'Inkscape is a free and open source vector graphics editor.', archs: ['x86_64', 'aarch64'] }
+  ];
+
+  var RANK_LABELS = ['Exact match', 'Name match', 'Name match', 'Description match'];
+
+  var state = {
+    cache: [],       // { name, desc, archs } in DOM order
+    nodes: [],       // mdui-list-item elements, same index as cache
+    loadedUrl: '',
+    usingSample: false,
+    warned: false
+  };
+
+  var drawer = document.getElementById('nav-drawer');
+  var openDrawer = document.getElementById('open-drawer');
+  var themeToggle = document.getElementById('theme-toggle');
+  var langSelect = document.getElementById('lang-select');
+  var form = document.getElementById('home-search-form');
+  var input = document.getElementById('home-search-input');
+  var archSelect = document.getElementById('home-arch-select');
+  var catSelect = document.getElementById('home-cat-select');
+  var resultsSection = document.getElementById('search-results');
+  var categoriesSection = document.getElementById('categories-section');
+  var resultsTitle = document.getElementById('search-results-title');
+  var countChip = document.getElementById('results-count-chip');
+  var listEl = document.getElementById('app-list');
+  var emptyCard = document.getElementById('search-empty');
+  var emptyTitle = document.getElementById('search-empty-title');
+  var emptyHint = document.getElementById('search-empty-hint');
+  var emptyReset = document.getElementById('search-empty-reset');
+
+  /* ---------- navigation drawer ---------- */
+  if (openDrawer && drawer) {
+    openDrawer.addEventListener('click', function () { drawer.open = !drawer.open; });
+  }
+
+  /* ---------- theme ---------- */
+  function themeIcon(theme) {
+    return theme === 'dark' ? 'dark_mode--rounded'
+      : theme === 'light' ? 'light_mode--rounded'
+      : 'brightness_auto--rounded';
+  }
+  function applyTheme(theme) {
+    if (window.mdui && mdui.setTheme) mdui.setTheme(theme);
+    try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+    if (themeToggle) {
+      themeToggle.icon = themeIcon(theme);
+      themeToggle.setAttribute('aria-label', 'Theme: ' + theme + ' (click to change)');
+    }
+  }
+  var savedTheme = 'auto';
+  try { savedTheme = localStorage.getItem(THEME_KEY) || 'auto'; } catch (e) {}
+  applyTheme(savedTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+      var current = (window.mdui && mdui.getTheme) ? mdui.getTheme() : savedTheme;
+      var next = current === 'auto' ? 'light' : current === 'light' ? 'dark' : 'auto';
+      applyTheme(next);
+      if (window.mdui && mdui.snackbar) mdui.snackbar({ message: 'Theme: ' + next, placement: 'bottom' });
+    });
+  }
+
+  /* ---------- dynamic colour ---------- */
+  // Seed the Material You scheme from the current brand blue. (mdui.getColorFromImage
+  // would work too, but pla.jpg is almost entirely a near-black navy and would give a
+  // washed-out scheme, so a fixed seed is used instead.)
+  try {
+    if (window.mdui && mdui.setColorScheme) mdui.setColorScheme('#58a6ff');
+  } catch (e) {}
+
+  /* ---------- language select ---------- */
+  if (langSelect) {
+    langSelect.value = LANG;
+    langSelect.addEventListener('change', function (e) {
+      try { localStorage.setItem(LANG_KEY, e.target.value); } catch (err) {}
+      window.location.href = '/' + e.target.value + '/index.html';
+    });
+  }
+
+  /* ---------- category select, built from the chips ---------- */
+  (function () {
+    if (!catSelect) return;
+    var chips = categoriesSection ? categoriesSection.querySelectorAll('mdui-chip[href]') : [];
+    var seen = {};
+    for (var i = 0; i < chips.length; i++) {
+      var href = chips[i].getAttribute('href') || '';
+      var slug = href.replace(/\.html$/, '').replace(/^.*\//, '');
+      if (!slug || slug === 'apps' || seen[slug]) continue;
+      seen[slug] = true;
+      var item = document.createElement('mdui-menu-item');
+      item.value = slug;
+      item.textContent = chips[i].textContent.trim();
+      catSelect.appendChild(item);
+    }
+  })();
+
+  /* ---------- data ---------- */
+  function normalize(data) {
+    var out = [];
+    for (var key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        out.push({
+          name: key,
+          description: data[key] && data[key].description ? data[key].description : '',
+          archs: (data[key] && data[key].archs) || []
+        });
+      }
+    }
+    return out;
+  }
+
+  function sampleData() {
+    return SAMPLE_APPS.map(function (a) {
+      return { name: a.name, description: a.description, archs: a.archs };
+    });
+  }
+
+  function loadData(url) {
+    return fetch(url)
+      .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(function (d) { state.usingSample = false; return normalize(d); })
+      .catch(function () {
+        state.usingSample = true;
+        if (!state.warned && window.mdui && mdui.snackbar) {
+          state.warned = true;
+          mdui.snackbar({
+            message: 'Sample data: apps.json is not reachable from this preview.',
+            placement: 'bottom',
+            autoCloseDelay: 5000
+          });
+        }
+        return sampleData();
+      });
+  }
+
+  /* ---------- rendering ----------
+     NOTE for porting back to index.in: the deployed site serves the list icons as
+     /icons_48/<name>.webp, and its data as /apps.json and /categories/<slug>.json
+     from the site root. This sample uses the checkout-relative paths below so it
+     renders without a build; swap them when moving this markup into index.in. */
+  function renderList(apps) {
+    var html = '';
+    for (var i = 0; i < apps.length; i++) {
+      var app = apps[i];
+      var name = app.name;
+      var script = name;
+      var blob = 'https://github.com/ivan-hc/AM/blob/main/programs/x86_64/' + encodeURIComponent(script);
+      var raw = 'https://raw.githubusercontent.com/ivan-hc/AM/main/programs/x86_64/' + encodeURIComponent(script);
+      html += '<mdui-list-item class="app-item" data-index="' + i + '">'
+        + '<img slot="icon" class="app-ico" loading="lazy" width="40" height="40" alt=""'
+        + ' src="icons/' + encodeURIComponent(name) + '.png"'
+        + " onerror=\"this.onerror=null;this.src='no-icon.png';this.classList.add('app-ico-default')\">"
+        + '<a class="app-name" href="/' + LANG + '/app/' + encodeURIComponent(name) + '.html">' + escapeHtml(name) + '</a>'
+        + '<span slot="description" class="app-desc">' + escapeHtml(app.description) + '</span>'
+        + '<div slot="end-icon" class="app-actions">'
+        + '<mdui-button-icon variant="text" href="' + blob + '" target="_blank" rel="noopener noreferrer" icon="code--rounded" aria-label="Install script on GitHub"></mdui-button-icon>'
+        + '<mdui-button-icon variant="text" href="' + raw + '" target="_blank" rel="noopener noreferrer" icon="article--rounded" aria-label="Raw install script"></mdui-button-icon>'
+        + '<mdui-button variant="filled" icon="download--rounded" href="pla-install://' + encodeURIComponent(name) + '" title="If this does not work, see FAQ #1">Install</mdui-button>'
+        + '</div>'
+        + '</mdui-list-item>';
+    }
+    listEl.innerHTML = html;
+
+    state.cache = [];
+    state.nodes = [];
+    var items = listEl.querySelectorAll('mdui-list-item');
+    for (var k = 0; k < items.length; k++) {
+      state.nodes.push(items[k]);
+      var src = apps[k];
+      state.cache.push({
+        name: (src.name || '').toLowerCase(),
+        desc: (src.description || '').toLowerCase(),
+        archs: src.archs || []
+      });
+    }
+  }
+
+  function matchRank(cache, terms, k) {
+    var name = cache[k].name;
+    if (terms.length === 1 && name === terms[0]) return 0;
+    var nameHit = terms.every(function (t) { return name.indexOf(t) !== -1; });
+    if (!nameHit) return 3;
+    return name.indexOf(terms[0]) === 0 ? 1 : 2;
+  }
+
+  function applyFilter() {
+    var terms = (input && input.value ? input.value : '').toLowerCase().split(/\s+/).filter(Boolean);
+    var arch = archSelect ? (archSelect.value || '') : '';
+
+    var old = listEl.querySelectorAll('.rank-heading');
+    for (var h = 0; h < old.length; h++) old[h].remove();
+
+    var matched = [];
+    for (var k = 0; k < state.nodes.length; k++) {
+      var c = state.cache[k];
+      var matchesSearch = !terms.length || terms.every(function (t) {
+        return c.name.indexOf(t) !== -1 || c.desc.indexOf(t) !== -1;
+      });
+      var matchesArch = !arch || c.archs.indexOf(arch) !== -1;
+      var visible = matchesSearch && matchesArch;
+      state.nodes[k].classList.toggle('is-hidden', !visible);
+      if (visible) {
+        matched.push({ index: k, rank: terms.length ? matchRank(state.cache, terms, k) : 0 });
+      }
+    }
+
+    if (countChip) countChip.textContent = matched.length + ' result' + (matched.length === 1 ? '' : 's');
+
+    if (!matched.length) {
+      var raw = input ? input.value.trim() : '';
+      if (emptyTitle) emptyTitle.textContent = raw ? 'No applications found matching \u201c' + raw + '\u201d' : 'No applications found';
+      if (emptyHint) emptyHint.textContent = arch
+        ? 'Try selecting \u201cAll architectures\u201d or broadening your search keywords.'
+        : 'Check for typos or try searching with different keywords.';
+      listEl.classList.add('is-hidden');
+      emptyCard.classList.remove('is-hidden');
+      return;
+    }
+
+    listEl.classList.remove('is-hidden');
+    emptyCard.classList.add('is-hidden');
+
+    if (terms.length) {
+      matched.sort(function (a, b) {
+        return a.rank !== b.rank ? a.rank - b.rank
+          : state.cache[a.index].name.localeCompare(state.cache[b.index].name);
+      });
+    }
+
+    var lastLabel = null;
+    for (var m = 0; m < matched.length; m++) {
+      var entry = matched[m];
+      if (terms.length) {
+        var label = RANK_LABELS[entry.rank];
+        if (label !== lastLabel) {
+          var sub = document.createElement('mdui-list-subheader');
+          sub.className = 'rank-heading';
+          sub.textContent = label;
+          listEl.appendChild(sub);
+          lastLabel = label;
+        }
+      }
+      listEl.appendChild(state.nodes[entry.index]);
+    }
+  }
+
+  function showResults(url, title) {
+    resultsSection.classList.remove('is-hidden');
+    categoriesSection.classList.add('is-hidden');
+    if (resultsTitle) resultsTitle.textContent = title || 'Search Results';
+
+    if (state.loadedUrl === url && state.nodes.length) {
+      applyFilter();
+      return;
+    }
+    state.loadedUrl = url;
+    if (countChip) countChip.textContent = 'Loading\u2026';
+
+    loadData(url).then(function (apps) {
+      renderList(apps);
+      applyFilter();
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function categoryTitle() {
+    var c = catSelect ? (catSelect.value || '') : '';
+    if (!c) return 'Search Results';
+    var item = catSelect.querySelector('mdui-menu-item[value="' + c + '"]');
+    return item ? item.textContent.trim() : 'Search Results';
+  }
+
+  function currentUrl() {
+    var c = catSelect ? (catSelect.value || '') : '';
+    return c ? 'categories/' + c + '.json' : 'apps.json';
+  }
+
+  function triggerSearch() {
+    var val = input ? input.value.trim() : '';
+    var c = catSelect ? (catSelect.value || '') : '';
+    if (!val && !c && !(archSelect && archSelect.value)) {
+      resultsSection.classList.add('is-hidden');
+      categoriesSection.classList.remove('is-hidden');
+      return;
+    }
+    var title = (c && !val) ? categoryTitle() : 'Search Results';
+    showResults(currentUrl(), title);
+  }
+
+  /* ---------- events ---------- */
+  var debounce;
+  if (input) {
+    input.addEventListener('input', function () {
+      clearTimeout(debounce);
+      debounce = setTimeout(triggerSearch, 150);
+    });
+    input.addEventListener('clear', function () {
+      clearTimeout(debounce);
+      debounce = setTimeout(triggerSearch, 0);
+    });
+  }
+  if (archSelect) archSelect.addEventListener('change', triggerSearch);
+  if (catSelect) catSelect.addEventListener('change', triggerSearch);
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      triggerSearch();
+    });
+  }
+  if (emptyReset) {
+    emptyReset.addEventListener('click', function () {
+      if (input) input.value = '';
+      if (archSelect) archSelect.value = '';
+      if (catSelect) catSelect.value = '';
+      resultsSection.classList.add('is-hidden');
+      categoriesSection.classList.remove('is-hidden');
+      if (input && input.focus) input.focus();
+    });
+  }
+
+  /* ---------- FAQ deep links ---------- */
+  function openFaqFromHash() {
+    var hash = window.location.hash;
+    if (!hash || hash.length < 2) return;
+    var target = document.getElementById(hash.slice(1));
+    if (!target) return;
+    var item = target.closest ? target.closest('mdui-collapse-item') : null;
+    if (item) {
+      var collapse = item.closest('mdui-collapse');
+      if (collapse && item.value) collapse.value = item.value;
+    }
+    setTimeout(function () {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+  }
+  window.addEventListener('hashchange', openFaqFromHash);
+  window.addEventListener('load', openFaqFromHash);
+  openFaqFromHash();
+})();
+</script>
+
+</body>
+</html>
