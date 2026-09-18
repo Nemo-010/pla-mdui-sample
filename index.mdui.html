@@ -101,8 +101,17 @@
 
     /* ---------- Top app bar ---------- */
     mdui-top-app-bar { background: rgb(var(--mdui-color-surface-container)); }
-    #lang-select { min-width: 130px; margin: 0 .25rem; }
-    .lang-select mdui-menu-item { min-width: 130px; }
+    /* mdui-select is :host{display:inline-block;width:100%} by design, and the top
+       app bar makes slotted children flex-shrink:0. Left alone it becomes a
+       full-width flex item that eats the whole row, so pin it to a compact width
+       and let the flex-grow spacer push it (and the icons) to the right corner. */
+    #lang-select {
+      width: 148px;
+      min-width: 0;
+      flex: 0 0 auto;
+      margin: 0 .25rem;
+    }
+    .lang-select mdui-menu-item { min-width: 148px; }
 
     /* ---------- Navigation drawer ---------- */
     #nav-drawer::part(panel) { background: rgb(var(--mdui-color-surface-container-low)); }
@@ -254,7 +263,7 @@
     .app-actions { display: flex; align-items: center; gap: .25rem; }
     @media (max-width: 640px) {
       .app-actions mdui-button-icon { display: none; }
-      #lang-select { min-width: 92px; }
+      #lang-select { width: 118px; }
       .hide-sm { display: none !important; }
     }
     .rank-heading { color: rgb(var(--mdui-color-primary)); font-weight: 600; }
