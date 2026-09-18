@@ -209,6 +209,15 @@
       .search-row mdui-button { grid-column: 1 / -1; }
     }
     .filter-select { min-width: 190px; }
+    /* The select builds its dropdown as <mdui-menu part="menu">, which has no
+       max-height/overflow of its own. With 34 categories the menu grew taller
+       than the viewport and the page scrolled instead of the menu. Cap it and
+       keep the wheel/touch scroll inside the menu (overscroll-behavior). */
+    mdui-select::part(menu) {
+      max-height: min(60vh, 360px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
     .search-hint { margin: .75rem 0 0; font-size: .8125rem; color: rgb(var(--mdui-color-on-surface-variant)); }
 
     /* ---------- Results ---------- */
