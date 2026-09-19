@@ -878,6 +878,31 @@ span.ap-marker-container:hover span.ap-marker {
     }
     .lang-select mdui-menu-item { min-width: 148px; }
 
+    /* Native <input type="color">, styled down to a Material swatch button so it
+       sits next to the theme toggle. The browser supplies the picker itself. */
+    #color-picker {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 0;
+      border-radius: var(--mdui-shape-corner-full);
+      background: transparent;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    #color-picker::-webkit-color-swatch-wrapper { padding: 5px; }
+    #color-picker::-webkit-color-swatch {
+      border: 2px solid rgb(var(--mdui-color-outline));
+      border-radius: var(--mdui-shape-corner-full);
+    }
+    #color-picker::-moz-color-swatch {
+      border: 2px solid rgb(var(--mdui-color-outline));
+      border-radius: var(--mdui-shape-corner-full);
+    }
+    #color-picker:focus-visible { outline: 2px solid rgb(var(--mdui-color-primary)); outline-offset: 2px; }
+
     /* ---------- Navigation drawer ---------- */
     #nav-drawer::part(panel) { background: rgb(var(--mdui-color-surface-container-low)); }
     .drawer-head {
@@ -1154,6 +1179,7 @@ span.ap-marker-container:hover span.ap-marker {
   <mdui-button-icon id="open-drawer" icon="menu--rounded" aria-label="Open navigation drawer"></mdui-button-icon>
   <mdui-top-app-bar-title>PORTABLE LINUX APPS</mdui-top-app-bar-title>
   <div style="flex-grow: 1"></div>
+  <input type="color" id="color-picker" value="#58a6ff" aria-label="Primary colour" title="Primary colour">
   <mdui-button-icon id="theme-toggle" icon="brightness_auto--rounded" aria-label="Change theme"></mdui-button-icon>
   <!-- $SUPPORTED_LANGUAGES: ["en","it","vi"] in index.in -->
   <mdui-select id="lang-select" value="en" aria-label="Language" class="lang-select">
@@ -1630,6 +1656,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var drawer = document.getElementById('nav-drawer');
   var openDrawer = document.getElementById('open-drawer');
   var themeToggle = document.getElementById('theme-toggle');
+  var colorPicker = document.getElementById('color-picker');
   var langSelect = document.getElementById('lang-select');
   var form = document.getElementById('home-search-form');
   var input = document.getElementById('home-search-input');
@@ -1678,12 +1705,66 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ---------- dynamic colour ---------- */
-  // Seed the Material You scheme from the current brand blue. (mdui.getColorFromImage
-  // would work too, but pla.jpg is almost entirely a near-black navy and would give a
-  // washed-out scheme, so a fixed seed is used instead.)
-  try {
-    if (window.mdui && mdui.setColorScheme) mdui.setColorScheme('#58a6ff');
-  } catch (e) {}
+  // One seed hex becomes a full light+dark scheme via mdui.setColorScheme, so the
+  // colour picker reskins every component at once. mdui.getColorFromImage(pla.jpg)
+  // is deliberately not used: the OG image is a near-black navy and gives a washed
+  // out scheme.
+  var COLOR_KEY = 'pla-seed-color';
+  var DEFAULT_SEED = '#58a6ff';
+
+  // mdui's dark surfaces sit around Material tone 4-24, which still reads as dark
+  // grey. These factors scale the scheme's own dark surface tokens down in place so
+  // the result stays tinted by the picked seed instead of becoming flat black.
+  var DARKEN = {
+    '--mdui-color-background-dark': 0.4,
+    '--mdui-color-surface-dark': 0.5,
+    '--mdui-color-surface-dim-dark': 0.45,
+    '--mdui-color-surface-bright-dark': 0.75,
+    '--mdui-color-surface-variant-dark': 0.6,
+    '--mdui-color-surface-container-lowest-dark': 0.4,
+    '--mdui-color-surface-container-low-dark': 0.5,
+    '--mdui-color-surface-container-dark': 0.55,
+    '--mdui-color-surface-container-high-dark': 0.6,
+    '--mdui-color-surface-container-highest-dark': 0.65
+  };
+
+  function applyDarkerDark() {
+    var root = document.documentElement;
+    var keys = Object.keys(DARKEN);
+    // Clear the previous inline overrides first, or every pick would compound.
+    keys.forEach(function (name) { root.style.removeProperty(name); });
+
+    var computed = getComputedStyle(root);
+    keys.forEach(function (name) {
+      var rgb = computed.getPropertyValue(name)
+        .split(/[,\s]+/).filter(function (s) { return s !== ''; })
+        .map(Number);
+      if (rgb.length !== 3 || rgb.some(isNaN)) return;
+      var factor = DARKEN[name];
+      root.style.setProperty(name, rgb.map(function (v) {
+        return Math.max(0, Math.min(255, Math.round(v * factor)));
+      }).join(', '));
+    });
+  }
+
+  function applySeed(hex) {
+    try {
+      if (window.mdui && mdui.setColorScheme) mdui.setColorScheme(hex);
+    } catch (e) {}
+    if (colorPicker) colorPicker.value = hex;
+    try { localStorage.setItem(COLOR_KEY, hex); } catch (e) {}
+    applyDarkerDark();
+  }
+
+  if (colorPicker) {
+    // 'input' fires continuously while the native picker is dragged, so the page
+    // recolours live; 'change' fires when the dialog is confirmed.
+    colorPicker.addEventListener('input', function (e) { applySeed(e.target.value); });
+  }
+
+  var savedSeed = DEFAULT_SEED;
+  try { savedSeed = localStorage.getItem(COLOR_KEY) || DEFAULT_SEED; } catch (e) {}
+  applySeed(savedSeed);
 
   /* ---------- language select ---------- */
   if (langSelect) {
